@@ -4,23 +4,19 @@ import streamlit as st
 from pinecone import Pinecone
 from langchain_pinecone import PineconeVectorStore
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_together import Together
+from langchain_mistralai import ChatMistralAI
 from langchain.chains import RetrievalQAWithSourcesChain
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
+from langchain.embeddings import HuggingFaceEmbeddings
 
 # Initialize Pinecone connection
 pc = Pinecone(api_key=st.secrets.PINECONE_API_KEY)
 INDEX_NAME = "ragreader"
 
-# Get existing index
-index = pc.Index(INDEX_NAME)
-
-# Initialize embeddings with explicit dimension setting
-embeddings = OpenAIEmbeddings(
-    model="text-embedding-3-small",
-    openai_api_key=st.secrets.OPENAI_API_KEY,
-    dimensions=1024  # Must match index dimension
+# Initialize embeddings (1024 dimensions)
+embeddings = HuggingFaceEmbeddings(
+    model_name="BAAI/bge-large-en-v1.5",  # 1024-dimensional embeddings
+    model_kwargs={'device': 'cpu'}  # Use 'cuda' if GPU available
 )
 
 # Document processing pipeline
@@ -42,28 +38,24 @@ def process_documents(uploaded_files):
     )
     split_docs = text_splitter.split_documents(docs)
     
-    # Store in Pinecone using existing index
+    # Store in Pinecone
     PineconeVectorStore.from_documents(
         documents=split_docs,
         embedding=embeddings,
-        index_name=INDEX_NAME,
-        text_key="text"
+        index_name=INDEX_NAME
     )
 
-# Initialize QA chain
+# Initialize QA chain with Mistral
 def init_qa_chain():
-    llm = Together(
-        model="togethercomputer/llama-3-70b-chat",
+    llm = ChatMistralAI(
+        model="mistral-tiny",
         temperature=0.3,
-        max_tokens=1024,
-        together_api_key=st.secrets.TOGETHER_API_KEY
+        mistral_api_key=st.secrets.MISTRAL_API_KEY
     )
     
-    # Connect to existing vector store
     vector_store = PineconeVectorStore(
         index_name=INDEX_NAME,
-        embedding=embeddings,
-        text_key="text"
+        embedding=embeddings
     )
     
     return RetrievalQAWithSourcesChain.from_chain_type(
