@@ -41,7 +41,7 @@ pinecone-client
 langchain
 transformers
 mistralai
-```bash
+```
 
 ## 🔧 Configuration
 
@@ -63,15 +63,7 @@ mistralai
 
 ## 🔍 Example Workflow
 
-User uploads research papers
-↓
-Documents are chunked and embedded
-↓
-User asks: "What are the key findings?"
-↓
-AI retrieves relevant sections
-↓
-Generates comprehensive answer
+User uploads research papers ➡️ Documents are chunked and embedded ➡️ User asks: "What are the key findings?" ➡️ AI retrieves relevant sections ➡️ Generates comprehensive answer
 
 
 ## 🔒 Security Notes
