@@ -4,7 +4,7 @@
 
 This Streamlit application implements a Retrieval-Augmented Generation (RAG) system for intelligent document-based question answering, enabling users to upload PDFs and interactively query their contents.
 
-[./Screenshot (1697)]
+[./Screenshot (1697).png]
 
 ## 🌟 Features
 
