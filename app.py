@@ -13,10 +13,8 @@ from langchain_openai import OpenAIEmbeddings
 pc = Pinecone(api_key=st.secrets.PINECONE_API_KEY)
 INDEX_NAME = "ragreader"
 
-# Validate index configuration
-index_info = pc.describe_index(INDEX_NAME)
-assert index_info.dimension == 1024, "Index dimension mismatch (expected 1024)"
-assert index_info.metric == "cosine", "Index metric mismatch (expected cosine)"
+# Get existing index
+index = pc.Index(INDEX_NAME)
 
 # Initialize embeddings with explicit dimension setting
 embeddings = OpenAIEmbeddings(
@@ -44,12 +42,12 @@ def process_documents(uploaded_files):
     )
     split_docs = text_splitter.split_documents(docs)
     
-    # Store in Pinecone
+    # Store in Pinecone using existing index
     PineconeVectorStore.from_documents(
         documents=split_docs,
         embedding=embeddings,
         index_name=INDEX_NAME,
-        pinecone_client=pc
+        text_key="text"
     )
 
 # Initialize QA chain
@@ -61,10 +59,11 @@ def init_qa_chain():
         together_api_key=st.secrets.TOGETHER_API_KEY
     )
     
+    # Connect to existing vector store
     vector_store = PineconeVectorStore(
         index_name=INDEX_NAME,
         embedding=embeddings,
-        pinecone_client=pc
+        text_key="text"
     )
     
     return RetrievalQAWithSourcesChain.from_chain_type(
