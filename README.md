@@ -35,12 +35,13 @@ This Streamlit application implements a Retrieval-Augmented Generation (RAG) sys
 
 ## 📦 Dependencies
 
+```bash
 streamlit
 pinecone-client
 langchain
 transformers
 mistralai
-
+```bash
 
 ## 🔧 Configuration
 
@@ -88,12 +89,11 @@ Generates comprehensive answer
 
 ## 📝 License
 
-[Your License Here - e.g., MIT]
+[MIT]
 
 ## 👥 Contributors
 
-- [Your Name]
-- [Contributor Names]
+- [Gauri Sharan]
 
 ## 🙏 Acknowledgements
 
