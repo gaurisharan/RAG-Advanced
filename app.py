@@ -1,32 +1,33 @@
 import os
 import tempfile
 import streamlit as st
+from pinecone import Pinecone, ServerlessSpec
 from langchain_pinecone import PineconeVectorStore
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_together import Together
 from langchain.chains import RetrievalQAWithSourcesChain
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
-import pinecone
 
-# Initialize Pinecone
+# Initialize Pinecone client
 def init_pinecone(api_key, index_name):
-    pinecone.init(api_key=api_key)
+    pc = Pinecone(api_key=api_key)
     
-    if index_name not in pinecone.list_indexes():
-        pinecone.create_index(
+    # Create index if not exists
+    if index_name not in pc.list_indexes().names():
+        pc.create_index(
             name=index_name,
-            dimension=1536,  # Match OpenAI embedding size
+            dimension=1536,
             metric="cosine",
-            spec=pinecone.ServerlessSpec(
+            spec=ServerlessSpec(
                 cloud="aws",
                 region="us-west-2"
             )
         )
-    return pinecone.Index(index_name)
+    return pc
 
 # Process uploaded documents
-def process_documents(uploaded_files, openai_key, pinecone_key, index_name):
+def process_documents(uploaded_files, openai_key, pc, index_name):
     docs = []
     
     # Load PDF files
@@ -44,17 +45,18 @@ def process_documents(uploaded_files, openai_key, pinecone_key, index_name):
     )
     split_docs = text_splitter.split_documents(docs)
     
-    # Create embeddings and store in Pinecone
+    # Create embeddings
     embeddings = OpenAIEmbeddings(
         model="text-embedding-3-small",
         openai_api_key=openai_key
     )
     
+    # Store in Pinecone
     return PineconeVectorStore.from_documents(
         documents=split_docs,
         embedding=embeddings,
         index_name=index_name,
-        pinecone_api_key=pinecone_key
+        pinecone_client=pc
     )
 
 # Initialize the QA chain
@@ -96,13 +98,13 @@ with st.sidebar:
         else:
             with st.spinner("Initializing..."):
                 # Initialize Pinecone
-                init_pinecone(pinecone_key, index_name)
+                pc = init_pinecone(pinecone_key, index_name)
                 
                 # Process documents
                 vector_store = process_documents(
                     uploaded_files,
                     openai_key,
-                    pinecone_key,
+                    pc,
                     index_name
                 )
                 
